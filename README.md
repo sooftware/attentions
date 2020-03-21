@@ -10,6 +10,8 @@
   
 * Dot Product Attention: [Citation](https://arxiv.org/pdf/1508.04025.pdf)  
   
+* Additive Attention: [Citation](https://arxiv.org/abs/1409.0473)
+  
 * Hybrid Attention: [Citation](https://arxiv.org/pdf/1506.07503.pdf)  
   
 * Content-based Attention: [Citation](https://arxiv.org/pdf/1506.07503.pdf)  
