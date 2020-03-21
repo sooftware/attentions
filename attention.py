@@ -34,11 +34,14 @@ class MultiHeadAttention(nn.Module):
     Applies an multi-head attention mechanism on the output features from the decoder.
     Refer to 「State-of-the-art Speech Recognition With Sequence-to-Sequence Models」 Paper
     https://arxiv.org/abs/1712.01769
+
     Args:
-        decoder_hidden_size (int): The number of expected features in the output
+        hidden_size (int): The number of expected features in the output
+
     Inputs: decoder_output, encoder_outputs
         - **decoder_output** (batch, output_len, dimensions): tensor containing the output features from the decoder.
         - **encoder_outputs** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
+
     Returns: output
         - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.
     Examples::
@@ -84,6 +87,46 @@ class MultiHeadAttention(nn.Module):
         return output
 
 
+class AdditiveAttention(nn.Module):
+    def __init__(self, hidden_size):
+        """
+        Args:
+            hidden_size (int): The number of expected features in the output
+
+        Inputs: decoder_output, encoder_outputs
+            - **decoder_output** (batch, output_len, dimensions): tensor containing the output features from the decoder.
+            - **encoder_outputs** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
+
+        Outputs
+            context: (seq_len, batch, decoder_hidden_dim)
+        """
+        super().__init__()
+        self.linear_k = nn.Linear(hidden_size, hidden_size)
+        self.linear_q = nn.Linear(hidden_size, hidden_size)
+        self.linear_out = nn.Linear(hidden_size, 1)
+
+    def forward(self, encoder_outputs, decoder_output, inputs):
+        """
+        Inputs
+            encoder_outputs: (batch, max_len, hidden_dim)
+            decoder_output: decoder_output (1 x batch x hidden_dim)
+            seq_lens: lengths of sequence (list of int)
+        Outputs
+            context: (batch, hidden_dim)
+        """
+        decoder_output = decoder_output.transpose(0, 1)
+
+        attn_score = self.linear_out(torch.tanh(self.linear_k(encoder_outputs) + self.linear_q(decoder_output)))
+        attn_score = attn_score.squeeze(-1)
+
+        attn_distribution = F.softmax(attn_score, -1)
+
+        context = attn_distribution.unsqueeze(1).bmm(encoder_outputs)
+
+        return context
+
+
+
 class HybridAttention(nn.Module):
     '''
     Score function : Hybrid attention (Location-aware Attention)
@@ -92,7 +135,7 @@ class HybridAttention(nn.Module):
         score = w^T( tanh( Ws + Vhs + Uf + b ) )
             => s : decoder_output
                hs : encoder_outputs
-               f : loc_conv(last_alignment)
+               f : loc_conv(last_align)
                b : bias
 
     Reference:
@@ -113,11 +156,11 @@ class HybridAttention(nn.Module):
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, decoder_output, encoder_outputs, last_alignment):
+    def forward(self, decoder_output, encoder_outputs, last_align):
         batch_size = decoder_output.size(0)
         hidden_size = decoder_output.size(2)
 
-        if last_alignment is None:
+        if last_align is None:
             attn_scores = self.w(
                 self.tanh(
                     self.W(decoder_output.reshape(-1, hidden_size)).view(batch_size, -1, self.context_size)
@@ -126,7 +169,7 @@ class HybridAttention(nn.Module):
                 )
             ).squeeze(dim=-1)
         else:
-            conv_prev_align = torch.transpose(self.loc_conv(last_alignment.unsqueeze(1)), 1, 2)
+            conv_prev_align = torch.transpose(self.loc_conv(last_align.unsqueeze(1)), 1, 2)
             attn_scores = self.w(
                 self.tanh(
                     self.W(decoder_output.reshape(-1, hidden_size)).view(batch_size, -1, self.context_size)
@@ -138,12 +181,13 @@ class HybridAttention(nn.Module):
 
         if self.smoothing:
             attn_scores = torch.sigmoid(attn_scores)
-            alignment = torch.div(attn_scores, attn_scores.sum(dim=-1).unsqueeze(dim=-1))
+            align = torch.div(attn_scores, attn_scores.sum(dim=-1).unsqueeze(dim=-1))
         else:
-            alignment = self.softmax(attn_scores)
+            align = self.softmax(attn_scores)
 
-        context = torch.bmm(alignment.unsqueeze(dim=1), encoder_outputs).squeeze(dim=1)
-        return context, alignment
+        context = torch.bmm(align.unsqueeze(dim=1), encoder_outputs).squeeze(dim=1)
+
+        return context, align
 
 
 class ContentBasedAttention(nn.Module):
@@ -176,8 +220,8 @@ class ContentBasedAttention(nn.Module):
                 + self.b
             )
         ).squeeze(dim=-1)
-        alignment = self.softmax(attn_scores)
-        context = torch.bmm(alignment.unsqueeze(dim=1), encoder_outputs).squeeze(dim=1)
+        align = self.softmax(attn_scores)
+        context = torch.bmm(align.unsqueeze(dim=1), encoder_outputs).squeeze(dim=1)
 
         return context
 
