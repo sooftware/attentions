@@ -12,7 +12,7 @@
 |Additive|score(***s_t***, ***h_i***) = **v** tanh(**W**\[***s_t***;***h_i***\])|[Bahdanau2015](https://arxiv.org/pdf/1409.0473.pdf)|  
 |Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i***|[Luong2015](https://arxiv.org/pdf/1508.04025.pdf)|  
 |Hybrid|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
-|Multi-Head|concat(head_1, ..., head_n) **W**|[Vaswani](https://arxiv.org/abs/1706.03762)|  
+|Multi-Head|concat(head_1, ..., head_n) **W**|[Vaswani2017](https://arxiv.org/abs/1706.03762)|  
 
   
 * Multi-Head Attention: [Citation](https://arxiv.org/abs/1712.01769)  
