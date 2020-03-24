@@ -29,11 +29,6 @@ import torch.functional as F
 # Pytorch Implementation of Some Attention
 # any questions, bug reports or recommends, please Contacts sh951011@gmail.com
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import copy
-
 
 class MultiHeadAttention(nn.Module):
     r"""
@@ -72,7 +67,7 @@ class MultiHeadAttention(nn.Module):
         query_length = query.size(1)
         key_length = key.size(1)
 
-        residual = copy.deepcopy(query)
+        residual = query
 
         query = self.linear_q(query).view(batch_size, query_length, self.n_head, self.dim).permute(2, 0, 1, 3)
         key = self.linear_k(key).view(batch_size, key_length, self.n_head, self.dim).permute(2, 0, 1, 3)
