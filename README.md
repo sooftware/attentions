@@ -25,7 +25,7 @@ I appreciate any kind of feedback or contribution.  Feel free to proceed with sm
 ```
 MIT License
 
-Copyright (c) 2020 KimSooHwan
+Copyright (c) 2020 sooftware
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
