@@ -39,11 +39,13 @@ class MultiHeadAttention(nn.Module):
 
 
     Args:
-        decoder_hidden_size (int): The number of expected features in the output
+        in_features (int): The number of expected features in the output
+        n_head (int): number of heads. (default: 4)
+        dim (int): dimension size of sub heads. (default: 128)
 
-    Inputs: decoder_output, encoder_outputs
-        - **decoder_output** (batch, output_len, dimensions): tensor containing the output features from the decoder.
-        - **encoder_outputs** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
+    Inputs: query, key
+        - **query** (batch, output_len, dimensions): tensor containing the output features from the decoder.
+        - **key** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
 
     Returns: output
         - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.
@@ -61,6 +63,7 @@ class MultiHeadAttention(nn.Module):
         self.linear_q = nn.Linear(in_features, dim * n_head)
         self.linear_k = nn.Linear(in_features, dim * n_head)
         self.dim = dim
+
 
     def forward(self, query, key):
         batch_size = key.size(0)
