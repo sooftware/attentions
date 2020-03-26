@@ -4,6 +4,12 @@
   
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-MIT-yellow" height=20>
   
+## Intro
+  
+Attention Mechanism allows the decoder to attend to different parts of the source sentence at each step of the output generation. Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.
+  
+<img src="https://miro.medium.com/max/1200/1*1V221DO9QIafh4htkwVBYw.jpeg" width=700>
+  
 ## Implementation list
   
 |Name|Alignment score function|Citation|  
