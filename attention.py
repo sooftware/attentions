@@ -31,30 +31,6 @@ import torch.functional as F
 
 
 class MultiHeadAttention(nn.Module):
-    r"""
-    Applies an multi-head attention mechanism on the output features from the decoder.
-
-    Refer to 「State-of-the-art Speech Recognition With Sequence-to-Sequence Models」 Paper
-    https://arxiv.org/abs/1712.01769
-
-
-    Args:
-        in_features (int): The number of expected features in the output
-        n_head (int): number of heads. (default: 4)
-        dim (int): dimension size of sub heads. (default: 128)
-
-    Inputs: query, key
-        - **query** (batch, output_len, dimensions): tensor containing the output features from the decoder.
-        - **key** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
-
-    Returns: output
-        - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.
-
-    Examples::
-        >>> attention = MultiHeadAttention(in_features, n_head=4, dim=128)
-        >>> output = attention(decoder_output, encoder_outputs)
-    """
-
     def __init__(self, in_features, n_head=4, dim=128):
         super(MultiHeadAttention, self).__init__()
         self.in_features = in_features
@@ -97,31 +73,12 @@ class MultiHeadAttention(nn.Module):
 
 class AdditiveAttention(nn.Module):
     def __init__(self, hidden_size):
-        """
-        Args:
-            hidden_size (int): The number of expected features in the output
-
-        Inputs: decoder_output, encoder_outputs
-            - **decoder_output** (batch, output_len, dimensions): tensor containing the output features from the decoder.
-            - **encoder_outputs** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.
-
-        Outputs
-            context: (seq_len, batch, decoder_hidden_dim)
-        """
         super().__init__()
         self.linear_k = nn.Linear(hidden_size, hidden_size)
         self.linear_q = nn.Linear(hidden_size, hidden_size)
         self.linear_out = nn.Linear(hidden_size, 1)
 
     def forward(self, encoder_outputs, decoder_output, inputs):
-        """
-        Inputs
-            encoder_outputs: (batch, max_len, hidden_dim)
-            decoder_output: decoder_output (1 x batch x hidden_dim)
-            seq_lens: lengths of sequence (list of int)
-        Outputs
-            context: (batch, hidden_dim)
-        """
         decoder_output = decoder_output.transpose(0, 1)
 
         attn_score = self.linear_out(torch.tanh(self.linear_k(encoder_outputs) + self.linear_q(decoder_output)))
@@ -136,20 +93,6 @@ class AdditiveAttention(nn.Module):
 
 
 class HybridAttention(nn.Module):
-    '''
-    Score function : Hybrid attention (Location-aware Attention)
-
-    .. math ::
-        score = w^T( tanh( Ws + Vhs + Uf + b ) )
-            => s : decoder_output
-               hs : encoder_outputs
-               f : loc_conv(last_align)
-               b : bias
-
-    Reference:
-        「Attention-Based Models for Speech Recognition」 Paper
-         https://arxiv.org/pdf/1506.07503.pdf
-    '''
     def __init__(self, decoder_hidden_size, encoder_hidden_size, context_size, k = 10, smoothing=True):
         super(HybridAttention, self).__init__()
         self.decoder_hidden_size = decoder_hidden_size
@@ -199,14 +142,6 @@ class HybridAttention(nn.Module):
 
 
 class ContentBasedAttention(nn.Module):
-    """
-    Applies an content-based attention mechanism on the output features from the decoder.
-
-    Reference:
-        「Attention-Based Models for Speech Recognition」 Paper
-         https://arxiv.org/pdf/1506.07503.pdf
-
-    """
     def __init__(self, decoder_hidden_size, encoder_hidden_size, context_size):
         super(ContentBasedAttention, self).__init__()
         self.W = nn.Linear(decoder_hidden_size, context_size, bias=False)
@@ -235,26 +170,6 @@ class ContentBasedAttention(nn.Module):
 
 
 class DotAttention(nn.Module):
-    """
-    Applies an dot product attention mechanism on the output features from the decoder.
-
-    .. math::
-            \begin{array}{ll}
-            x = context*output \\
-            attn = exp(x_i) / sum_j exp(x_j) \\
-            output = \tanh(w * (attn * encoder_output) + b * output)
-            \end{array}
-
-    Args:
-        dim(int): The number of expected features in the output
-
-    Inputs: decoder_output, encoder_output
-        - **decoder_output** (batch, output_len, hidden_size): tensor containing the output features from the decoder.
-        - **encoder_output** (batch, input_len, hidden_size): tensor containing features of the encoded input sequence.
-
-    Outputs: output, attn
-        - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.
-    """
     def __init__(self, decoder_hidden_size):
         super(DotAttention, self).__init__()
         self.linear_out = nn.Linear(decoder_hidden_size*2, decoder_hidden_size)
