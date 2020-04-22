@@ -1,34 +1,17 @@
 """
-MIT License
+    @source_code{
+        title={some attention implementation},
+        author={Soohwan Kim},
+        year={2020}
+    }
 
-Copyright (c) 2020 KimSooHwan
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+    Pytorch Implementation of some attention
+    any questions, bug reports or recommends, please Contacts sh951011@gmail.com
 """
 
 import torch
 import torch.nn as nn
 import torch.functional as F
-
-
-# Pytorch Implementation of Some Attention
-# any questions, bug reports or recommends, please Contacts sh951011@gmail.com
 
 
 class MultiHeadAttention(nn.Module):
@@ -55,15 +38,15 @@ class MultiHeadAttention(nn.Module):
         values = values.permute(2, 0, 1, 3).contiguous().view(-1, value_length, self.dim)
 
         attn_score = torch.bmm(queries, values.transpose(1, 2))
-        attn_distribution = F.softmax(attn_score, dim=2)
+        alignment = F.softmax(attn_score, dim=2)
 
-        context = torch.bmm(attn_distribution, values).view(self.n_head, batch_size, query_length, self.dim)
-        context = context.permute(1, 2, 0, 3).contiguous().view(batch_size, query_length, -1)
+        attn_val = torch.bmm(alignment, values).view(self.n_head, batch_size, query_length, self.dim)
+        attn_val = attn_val.permute(1, 2, 0, 3).contiguous().view(batch_size, query_length, -1)
 
-        combined = torch.cat([context, preserved], dim=2)
-        output = torch.tanh(self.fc(combined.view(-1, 2 * self.in_features))).view(batch_size, -1, self.in_features)
+        combined = torch.cat([attn_val, preserved], dim=2)
+        context = torch.tanh(self.fc(combined.view(-1, 2 * self.in_features))).view(batch_size, -1, self.in_features)
 
-        return output
+        return context
 
 
 class AdditiveAttention(nn.Module):
