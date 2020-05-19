@@ -6,7 +6,7 @@
   
 ## Intro
   
-Attention Mechanism allows the decoder to attend to different parts of the source sentence at each step of the output generation. Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.
+Attention Mechanism allows to attend to different parts of the source sentence at each step of the output generation. Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.
   
 <img src="https://miro.medium.com/max/1200/1*1V221DO9QIafh4htkwVBYw.jpeg" width=700>
   
