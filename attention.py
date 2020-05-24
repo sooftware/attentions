@@ -21,10 +21,10 @@ class ScaledDotProductAttention(nn.Module):
         self.dim = dim
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, Q, V):
-        score = torch.bmm(Q, V.transpose(1, 2)) / np.sqrt(self.dim)
+    def forward(self, query, value):
+        score = torch.bmm(query, value.transpose(1, 2)) / np.sqrt(self.dim)
         align = self.softmax(score)
-        context = torch.bmm(align, V)
+        context = torch.bmm(align, value)
         return context, align
 
 
@@ -42,9 +42,9 @@ class MultiLocAwareAttention(nn.Module):
         num_heads (int): The number of heads. (default: )
         k (int): The dimension of convolution
 
-    Inputs: Q, V, prev_align
-        - **Q** (batch_size, q_len, hidden_dim): tensor containing the output features from the decoder.
-        - **V** (batch_size, v_len, hidden_dim): tensor containing features of the encoded input sequence.
+    Inputs: query, value, prev_align
+        - **query** (batch_size, q_len, hidden_dim): tensor containing the output features from the decoder.
+        - **value** (batch_size, v_len, hidden_dim): tensor containing features of the encoded input sequence.
         - **prev_align** (batch_size * num_heads, v_len): tensor containing previous timestep`s alignment
 
     Returns: output
@@ -64,17 +64,14 @@ class MultiLocAwareAttention(nn.Module):
         self.fc = nn.Linear(in_features << 1, in_features, bias=True)
         self.norm = nn.LayerNorm(in_features)
 
-    def forward(self, Q, V, prev_align):  # (batch_size * num_heads, v_len)
-        batch_size = V.size(0)
-        q_len = Q.size(1)
-        v_len = V.size(1)
-
-        residual = Q
+    def forward(self, query, value, prev_align):  # (batch_size * num_heads, v_len)
+        batch_size, q_len, v_len = value.size(0), query.size(1), value.size(1)
+        residual = query
 
         loc_energy = self.get_loc_energy(prev_align, batch_size, v_len)
 
-        q_s = self.W_Q(Q).view(batch_size, q_len, self.num_heads * self.dim)
-        v_s = self.W_V(V).view(batch_size, v_len, self.num_heads * self.dim) + loc_energy
+        q_s = self.W_Q(query).view(batch_size, q_len, self.num_heads * self.dim)
+        v_s = self.W_V(value).view(batch_size, v_len, self.num_heads * self.dim) + loc_energy
 
         q_s = q_s.view(batch_size, q_len, self.num_heads, self.dim).permute(2, 0, 1, 3)
         v_s = v_s.view(batch_size, v_len, self.num_heads, self.dim).permute(2, 0, 1, 3)
@@ -115,12 +112,12 @@ class MultiHeadAttention(nn.Module):
         self.fc = nn.Linear(in_features + dim * num_head, in_features)
         self.norm = nn.LayerNorm(self.in_features)
 
-    def forward(self, Q, V):
-        batch_size = V.size(0)
-        residual = Q
+    def forward(self, query, value):
+        batch_size = value.size(0)
+        residual = query
 
-        q_s = self.W_Q(Q).view(batch_size, -1, self.num_head, self.dim)
-        v_s = self.W_V(V).view(batch_size, -1, self.num_head, self.dim)
+        q_s = self.W_Q(query).view(batch_size, -1, self.num_head, self.dim)
+        v_s = self.W_V(value).view(batch_size, -1, self.num_head, self.dim)
 
         q_s = q_s.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_head, -1, self.dim)
         v_s = v_s.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_head, -1, self.dim)
@@ -146,12 +143,12 @@ class AdditiveAttention(nn.Module):
         self.fc = nn.Linear(hidden_dim, 1)
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, Q, V):
-        Q = Q.transpose(0, 1)
+    def forward(self, query, value):
+        query = query.transpose(0, 1)
 
-        score = self.fc(torch.tanh(self.W_V(V) + self.W_Q(Q))).squeeze(-1)
+        score = self.fc(torch.tanh(self.W_V(value) + self.W_Q(query))).squeeze(-1)
         align = nn.softmax(score)
-        context = torch.bmm(align.unsqueeze(1), V)
+        context = torch.bmm(align.unsqueeze(1), value)
 
         return context
 
@@ -172,16 +169,16 @@ class LocationAwareAttention(nn.Module):
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, Q, V, last_align):
-        batch_size = Q.size(0)
-        hidden_dim = Q.size(2)
+    def forward(self, query, value, last_align):
+        batch_size = query.size(0)
+        hidden_dim = query.size(2)
 
-        U = torch.transpose(self.conv(last_align.unsqueeze(1)), 1, 2)
+        conv_feat = torch.transpose(self.conv(last_align.unsqueeze(1)), 1, 2)
         attn_score = self.fc(
             self.tanh(
-                self.W_Q(Q.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
-                + self.W_V(V.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
-                + self.W_U(U)
+                self.W_Q(query.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
+                + self.W_V(value.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
+                + self.W_U(conv_feat)
                 + self.bias
             )
         ).squeeze(dim=-1)
@@ -209,20 +206,20 @@ class ContentBasedAttention(nn.Module):
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, Q, V):
-        batch_size = Q.size(0)
-        hidden_dim = Q.size(2)
+    def forward(self, query, value):
+        batch_size = query.size(0)
+        hidden_dim = query.size(2)
 
         attn_score = self.fc(
             self.tanh(
-                self.W_Q(Q.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
-                + self.W_V(V.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
+                self.W_Q(query.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
+                + self.W_V(value.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.bias
             )
         ).squeeze(dim=-1)
 
         align = self.softmax(attn_score)
-        context = torch.bmm(align.unsqueeze(dim=1), V).squeeze(dim=1)
+        context = torch.bmm(align.unsqueeze(dim=1), value).squeeze(dim=1)
 
         return context
 
@@ -235,16 +232,16 @@ class DotProductAttention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.norm = nn.LayerNorm(hidden_dim)
 
-    def forward(self, Q, V):
-        batch_size = Q.size(0)
-        hidden_dim = Q.size(2)
-        input_size = V.size(1)
+    def forward(self, query, value):
+        batch_size = query.size(0)
+        hidden_dim = query.size(2)
+        input_size = value.size(1)
 
-        attn_score = torch.bmm(Q, V.transpose(1, 2))
+        attn_score = torch.bmm(query, value.transpose(1, 2))
         align = nn.softmax(attn_score.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
-        attn_val = torch.bmm(align, V)
+        attn_val = torch.bmm(align, value)
 
-        combined = torch.cat((attn_val, Q), dim=2)
+        combined = torch.cat((attn_val, query), dim=2)
         context = self.norm(self.fc(combined.view(-1, 2 * hidden_dim))).view(batch_size, -1, hidden_dim)
 
         return context
