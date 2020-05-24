@@ -15,11 +15,6 @@ import torch.functional as F
 # any questions, bug reports or recommends, please Contacts sh951011@gmail.com
 
 
-import torch
-import torch.nn as nn
-import numpy as np
-
-
 class MultiHeadLocationAwareAttention(nn.Module):
     r"""
     Applies a multi-head + location-aware attention mechanism on the output features from the decoder.
@@ -89,7 +84,7 @@ class MultiHeadLocationAwareAttention(nn.Module):
         combined = torch.cat([context, residual], dim=2)
         output = torch.tanh(self.fc(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
 
-        return output, align
+        return output, align.squeeze()
 
 
 class MultiHeadAttention(nn.Module):
