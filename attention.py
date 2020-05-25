@@ -81,7 +81,7 @@ class MultiHybridAttention(nn.Module):
         self.linear_v = nn.Linear(in_features, self.dim * num_heads, bias=False)
         self.linear_u = nn.Linear(k, self.dim, bias=False)
         self.bias = nn.Parameter(torch.rand(self.dim * num_heads).uniform_(-0.1, 0.1))
-        self.fc = nn.Linear(in_features << 1, in_features, bias=True)
+        self.linear_out = nn.Linear(in_features << 1, in_features, bias=True)
         self.normalize = nn.LayerNorm(in_features)
 
     def forward(self, query, value, prev_align):
@@ -104,7 +104,7 @@ class MultiHybridAttention(nn.Module):
         context = context.contiguous().view(batch_size, q_len, -1)
 
         combined = torch.cat([context, residual], dim=2)
-        output = self.normalize(self.fc(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
+        output = self.normalize(self.linear_out(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
 
         return output, align.squeeze()
 
@@ -150,7 +150,7 @@ class MultiHeadAttention(nn.Module):
         self.scaled_dot = ScaledDotProductAttention(dim)
         self.linear_q = nn.Linear(in_features, dim * num_head)
         self.linear_v = nn.Linear(in_features, dim * num_head)
-        self.fc = nn.Linear(in_features << 1, in_features, bias=True)
+        self.linear_out = nn.Linear(in_features << 1, in_features, bias=True)
         self.normalize = nn.LayerNorm(self.in_features)
 
     def forward(self, query, value):
@@ -169,7 +169,7 @@ class MultiHeadAttention(nn.Module):
         context = context.permute(1, 2, 0, 3).contiguous().view(batch_size, -1, self.num_head * self.dim)
         combined = torch.cat([context, residual], dim=2)
 
-        output = self.normalize(self.fc(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
+        output = self.normalize(self.linear_out(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
         return output
 
 
@@ -179,11 +179,11 @@ class AdditiveAttention(nn.Module):
         super().__init__()
         self.linear_q = nn.Linear(hidden_dim, hidden_dim)
         self.linear_v = nn.Linear(hidden_dim, hidden_dim)
-        self.fc = nn.Linear(hidden_dim, 1)
+        self.linear_out = nn.Linear(hidden_dim, 1)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, query, value):
-        attn_score = self.fc(torch.tanh(self.linear_v(value) + self.linear_q(query.transpose(0, 1)))).squeeze(-1)
+        attn_score = self.linear_out(torch.tanh(self.linear_v(value) + self.linear_q(query.transpose(0, 1)))).squeeze(-1)
         align = nn.softmax(attn_score)
         context = torch.bmm(align.unsqueeze(1), value)
         return context
@@ -201,23 +201,20 @@ class LocationAwareAttention(nn.Module):
         self.linear_v = nn.Linear(enc_hidden_dim, attn_dim, bias=False)
         self.linear_u = nn.Linear(k, attn_dim, bias=False)
         self.bias = nn.Parameter(torch.rand(attn_dim).uniform_(-0.1, 0.1))
-        self.fc = nn.Linear(attn_dim, 1, bias=True)
+        self.linear_out = nn.Linear(attn_dim, 1, bias=True)
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, query, value, last_align):
-        batch_size = query.size(0)
-        hidden_dim = query.size(2)
+    def forward(self, query, value, prev_align):
+        batch_size, hidden_dim = query.size(0), query.size(2)
 
-        conv_feat = torch.transpose(self.conv1d(last_align.unsqueeze(1)), 1, 2)
-        attn_score = self.fc(
-            self.tanh(
+        conv_feat = torch.transpose(self.conv1d(prev_align.unsqueeze(1)), 1, 2)
+        attn_score = self.linear_out(self.tanh(
                 self.linear_q(query.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.linear_v(value.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.linear_u(conv_feat)
                 + self.bias
-            )
-        ).squeeze(dim=-1)
+        )).squeeze(dim=-1)
 
         if self.smoothing:
             attn_score = torch.sigmoid(attn_score)
@@ -237,7 +234,7 @@ class ContentBasedAttention(nn.Module):
         self.linear_q = nn.Linear(dec_hidden_dim, attn_dim, bias=False)
         self.linear_v = nn.Linear(enc_hidden_dim, attn_dim, bias=False)
         self.bias = nn.Parameter(torch.rand(attn_dim).uniform_(-0.1, 0.1))
-        self.fc = nn.Linear(attn_dim, 1, bias=True)
+        self.linear_out = nn.Linear(attn_dim, 1, bias=True)
         self.attn_dim = attn_dim
         self.tanh = nn.Tanh()
         self.softmax = nn.Softmax(dim=-1)
@@ -245,13 +242,11 @@ class ContentBasedAttention(nn.Module):
     def forward(self, query, value):
         batch_size, hidden_dim = query.size(0), query.size(2)
 
-        attn_score = self.fc(
-            self.tanh(
+        attn_score = self.linear_out(self.tanh(
                 self.linear_q(query.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.linear_v(value.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.bias
-            )
-        ).squeeze(dim=-1)
+        )).squeeze(dim=-1)
 
         align = self.softmax(attn_score)
         context = torch.bmm(align.unsqueeze(dim=1), value).squeeze(dim=1)
@@ -264,7 +259,7 @@ class DotProductAttention(nn.Module):
         super(DotProductAttention, self).__init__()
         self.softmax = nn.Softmax(dim=-1)
         self.normalize = nn.LayerNorm(hidden_dim)
-        self.fc = nn.Linear(hidden_dim * 2, hidden_dim)
+        self.linear_out = nn.Linear(hidden_dim * 2, hidden_dim)
 
     def forward(self, query, value):
         batch_size, hidden_dim, input_size = query.size(0), query.size(2), value.size(1)
@@ -274,6 +269,6 @@ class DotProductAttention(nn.Module):
         context = torch.bmm(align, value)
 
         combined = torch.cat((context, query), dim=2)
-        output = self.normalize(self.fc(combined.view(-1, 2 * hidden_dim))).view(batch_size, -1, hidden_dim)
+        output = self.normalize(self.linear_out(combined.view(-1, 2 * hidden_dim))).view(batch_size, -1, hidden_dim)
 
         return output
