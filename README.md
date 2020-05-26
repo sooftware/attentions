@@ -1,4 +1,4 @@
-# nlp-attentions
+# :stuck_out_tongue_winking_eye: nlp-attentions
   
 ### Pytorch implementation of some attentions used in Natural Language Processing
   
