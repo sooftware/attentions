@@ -1,14 +1,18 @@
-# Attention-Implementation
+# :stuck_out_tongue_winking_eye: nlp-attentions
   
-## Pytorch Implementation of Some Attention
+### Pytorch implementation of some attentions used in Natural Language Processing
   
 [<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-MIT-yellow" height=20>
   
 ## Intro
   
-Attention Mechanism allows to attend to different parts of the source sentence at each step of the output generation. Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.
+`nlp-attentions` provides some attentions used in natural language processing using pytorch.   
+these attentions can used in neural machine translation, speech recognition, image captioning etc...  
   
 <img src="https://miro.medium.com/max/1200/1*1V221DO9QIafh4htkwVBYw.jpeg" width=700>
+  
+Attention Mechanism allows to attend to different parts of the source sentence at each step of the output generation.   
+Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.  
   
 ## Implementation list
   
@@ -20,6 +24,7 @@ Attention Mechanism allows to attend to different parts of the source sentence a
 |Location-Aware|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
 |Scaled Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i*** / **d_k**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
 |Multi-Head|score(***Q***, ***K***, ***V***) = (head_1, ..., head_n) **W**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
+|Multi-Hybrid|Multi-Head + Location-Aware|Customizing|  
    
   
 ## Troubleshoots and Contributing
@@ -28,27 +33,13 @@ or Contacts sh951011@gmail.com please.
   
 I appreciate any kind of feedback or contribution.  Feel free to proceed with small issues like bug fixes, documentation improvement.  For major contributions and new features, please discuss with the collaborators in corresponding issues.  
   
-## License
+## Citing
 ```
-MIT License
-
-Copyright (c) 2020 sooftware
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+@github{
+  title = {nlp-attentions},
+  author = {Soohwan Kim},
+  publisher = {GitHub},
+  url = {https://github.com/sooftware/nlp-attentions},
+  year = {2020}
+}
 ```
