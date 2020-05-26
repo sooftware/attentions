@@ -263,16 +263,16 @@ class MultiHeadAttention(nn.Module):
         - **Attention Is All You Need**: https://arxiv.org/abs/1706.03762
         - **State-Of-The-Art Speech Recognition with Sequence-to-Sequence Models**: https://arxiv.org/abs/1712.01769
     """
-    def __init__(self, in_features, num_head=8, dim=64):
+    def __init__(self, hidden_dim, num_head=8):
         super(MultiHeadAttention, self).__init__()
-        self.in_features = in_features
+        self.hidden_dim = hidden_dim
         self.num_head = num_head
-        self.dim = dim
+        self.dim = int()
         self.scaled_dot = ScaledDotProductAttention(dim)
-        self.query_projection = nn.Linear(in_features, dim * num_head)
-        self.value_projection = nn.Linear(in_features, dim * num_head)
-        self.out_projection = nn.Linear(in_features << 1, in_features, bias=True)
-        self.normalize = nn.LayerNorm(self.in_features)
+        self.query_projection = nn.Linear(hidden_dim, dim * num_head)
+        self.value_projection = nn.Linear(hidden_dim, dim * num_head)
+        self.out_projection = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
+        self.normalize = nn.LayerNorm(self.hidden_dim)
 
     def forward(self, query, value):
         batch_size = value.size(0)
@@ -290,7 +290,7 @@ class MultiHeadAttention(nn.Module):
         context = context.permute(1, 2, 0, 3).contiguous().view(batch_size, -1, self.num_head * self.dim)
         combined = torch.cat([context, residual], dim=2)
 
-        output = self.normalize(self.out_projection(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
+        output = self.normalize(self.out_projection(combined.view(-1, self.hidden_dim << 1))).view(batch_size, -1, self.hidden_dim)
         return output
 
 
