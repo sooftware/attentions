@@ -22,10 +22,61 @@ Instead of encoding the input sequence into a single fixed context vector, we le
 |Additive|score(***s_t***, ***h_i***) = **v** tanh(**W**\[***s_t***;***h_i***\])|[Bahdanau 2015](https://arxiv.org/pdf/1409.0473.pdf)|  
 |Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i***|[Luong 2015](https://arxiv.org/pdf/1508.04025.pdf)|  
 |Location-Aware|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
+|Multi-headed Location-Aware|Multi-head + Location-aware|-|  
 |Scaled Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i*** / **d_k**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
 |Multi-Head|score(***Q***, ***K***, ***V***) = (head_1, ..., head_n) **W**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
-|Multi-Hybrid|Multi-Head + Location-Aware|Customizing|  
    
+## How To Use
+
+* Multi-headed Location-aware
+```python
+B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
+N_HEAD, N_CONV_OUT = 8, 10
+attn = None
+
+attention = MultiHeadedLocationAwareAttention(H, N_HEAD, N_CONV_OUT)
+
+# examples
+input_var = torch.FloatTensor(B, 1, H)
+hidden = torch.zeros(L, B, H)
+value = torch.FloatTensor(B, T, H)
+
+query, hidden = nn.GRU(input_var, hidden)
+output, attn = attention(query, value, attn)
+```
+
+* Location-aware 
+```python
+B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
+N_HEAD, N_CONV_OUT, ATTN_DIM = 8, 10, 256
+attn = None
+
+attention = LocationAwareAttention(H, ATTN_DIM, N_CONV_OUT, smoothing=True)
+
+# examples
+input_var = torch.FloatTensor(B, 1, H)
+hidden = torch.zeros(L, B, H)
+value = torch.FloatTensor(B, T, H)
+
+query, hidden = nn.GRU(input_var, hidden)
+output, attn = attention(query, value, attn)
+```
+
+* Multi-head
+```
+B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
+N_HEAD = 8
+
+attention = MultiHeadAttention(H, N_HEAD)
+
+# examples
+input_var = torch.FloatTensor(B, 1, H)
+hidden = torch.zeros(L, B, H)
+value = torch.FloatTensor(B, T, H)
+
+query, hidden = nn.GRU(input_var, hidden)
+output = attention(query, value)
+```
   
 ## Troubleshoots and Contributing
 If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sh951011/Attention-Implementation/issues) on Github.  
