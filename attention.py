@@ -1,7 +1,9 @@
 """
-@source_code{
-    title={some attention implementation},
+@github{
+    title={nlp-attentions},
     author={Soohwan Kim},
+    url={https://github.com/sooftware/nlp-attentions},
+    publisher={GitHub}
     year={2020}
 }
 """
@@ -12,6 +14,7 @@ import torch.nn as nn
 
 # Pytorch Implementation of some attention
 # any questions, bug reports or recommends, please Contacts sh951011@gmail.com
+
 
 class MultiHeadedLocationAwareAttention(nn.Module):
     r"""
@@ -46,12 +49,12 @@ class MultiHeadedLocationAwareAttention(nn.Module):
         self.num_heads = num_heads
         self.dim = int(in_features / num_heads)
         self.conv1d = nn.Conv1d(num_heads, conv_out_channel, kernel_size=3, padding=1)
-        self.loc_proj = nn.Linear(conv_out_channel, self.dim, bias=False)
-        self.q_proj = nn.Linear(in_features, self.dim * num_heads, bias=False)
-        self.v_proj = nn.Linear(in_features, self.dim * num_heads, bias=False)
+        self.linear_q = nn.Linear(in_features, self.dim * num_heads, bias=False)
+        self.linear_v = nn.Linear(in_features, self.dim * num_heads, bias=False)
+        self.linear_u = nn.Linear(conv_out_channel, self.dim, bias=False)
         self.bias = nn.Parameter(torch.rand(self.dim).uniform_(-0.1, 0.1))
-        self.score_proj = nn.Linear(self.dim, 1, bias=True)
-        self.out_proj = nn.Linear(in_features << 1, in_features, bias=True)
+        self.linear_score = nn.Linear(self.dim, 1, bias=True)
+        self.linear_out = nn.Linear(in_features << 1, in_features, bias=True)
 
     def forward(self, query, value, prev_align):  # value : BxTxD
         batch_size, seq_len = value.size(0), value.size(1)
@@ -69,20 +72,20 @@ class MultiHeadedLocationAwareAttention(nn.Module):
         align = align.view(batch_size, self.num_heads, -1)  # BNxT => BxNxT
 
         combined = torch.cat([context, query], dim=2)
-        output = self.out_proj(combined.view(-1, self.in_features << 1)).view(batch_size, -1, self.in_features)
+        output = self.linear_out(combined.view(-1, self.in_features << 1)).view(batch_size, -1, self.in_features)
 
         return output, align
 
     def get_attn_score(self, query, value, prev_align, batch_size, seq_len):
-        loc_energy = torch.tanh(self.loc_proj(self.conv1d(prev_align).transpose(1, 2)))  # BxNxT => BxTxD
+        loc_energy = torch.tanh(self.linear_u(self.conv1d(prev_align).transpose(1, 2)))  # BxNxT => BxTxD
         loc_energy = loc_energy.unsqueeze(1).repeat(1, self.num_heads, 1, 1).view(-1, seq_len, self.dim)  # BxNxTxD => BNxTxD
 
-        query = self.q_proj(query).view(batch_size, -1, self.num_heads, self.dim).permute(0, 2, 1, 3)  # BxNxTxD
-        value = self.v_proj(value).view(batch_size, -1, self.num_heads, self.dim).permute(0, 2, 1, 3)  # BxNxTxD
+        query = self.linear_q(query).view(batch_size, -1, self.num_heads, self.dim).permute(0, 2, 1, 3)  # BxNxTxD
+        value = self.linear_v(value).view(batch_size, -1, self.num_heads, self.dim).permute(0, 2, 1, 3)  # BxNxTxD
         query = query.contiguous().view(-1, 1, self.dim)  # BNx1xD
         value = value.contiguous().view(-1, seq_len, self.dim)  # BNxTxD
 
-        score = self.score_proj(torch.tanh(value + query + loc_energy + self.bias)).squeeze(2)  # BNxTxD => BNxT
+        score = self.linear_score(torch.tanh(value + query + loc_energy + self.bias)).squeeze(2)  # BNxTxD => BNxT
         return score
 
 
@@ -99,14 +102,12 @@ class LocationAwareAttention(nn.Module):
         self.linear_u = nn.Linear(k, attn_dim, bias=False)
         self.bias = nn.Parameter(torch.rand(attn_dim).uniform_(-0.1, 0.1))
         self.linear_out = nn.Linear(attn_dim, 1, bias=True)
-        self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, query, value, prev_align):
         batch_size, hidden_dim = query.size(0), query.size(2)
 
         conv_feat = torch.transpose(self.conv1d(prev_align.unsqueeze(1)), 1, 2)
-        attn_score = self.linear_out(self.tanh(
+        attn_score = self.linear_out(torch.tanh(
                 self.linear_q(query.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.linear_v(value.reshape(-1, hidden_dim)).view(batch_size, -1, self.attn_dim)
                 + self.linear_u(conv_feat)
@@ -118,7 +119,7 @@ class LocationAwareAttention(nn.Module):
             align = torch.div(attn_score, attn_score.sum(dim=-1).unsqueeze(dim=-1))
 
         else:
-            align = self.softmax(attn_score)
+            align = F.softmax(attn_score, dim=-1)
 
         context = torch.bmm(align.unsqueeze(dim=1), value).squeeze(dim=1)
         return context, align
@@ -142,11 +143,10 @@ class ScaledDotProductAttention(nn.Module):
     def __init__(self, dim):
         super(ScaledDotProductAttention, self).__init__()
         self.dim = dim
-        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, query, value):
         attn_score = torch.bmm(query, value.transpose(1, 2)) / np.sqrt(self.dim)
-        align = self.softmax(attn_score)
+        align = F.softmax(attn_score, dim=-1)
         context = torch.bmm(align, value)
         return context, align
 
