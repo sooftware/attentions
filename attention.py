@@ -18,25 +18,24 @@ import torch.nn as nn
 
 class MultiHeadedLocationAwareAttention(nn.Module):
     r"""
-    Multi-headed Location-Aware (Hybrid) Attention
-    Applies a multi-head + location-aware attention mechanism on the output features from the decoder.
-    Multi-head attention proposed in "Attention Is All You Need" paper.
+    Applies a multi-headed location-aware attention mechanism on the output features from the decoder.
     Location-aware attention proposed in "Attention-Based Models for Speech Recognition" paper.
-    We combined these two attention mechanisms as custom.
+    The location-aware attention mechanism is performing well in speech recognition tasks.
+    In the above paper applied a signle head, but we applied multi head concept.
 
     Args:
         hidden_dim (int): The number of expected features in the output
         num_heads (int): The number of heads. (default: )
         conv_out_channel (int): The number of out channel in convolution
 
-    Inputs: query, value, prev_align
+    Inputs: query, value, prev_attn
         - **query** (batch, q_len, hidden_dim): tensor containing the output features from the decoder.
         - **value** (batch, v_len, hidden_dim): tensor containing features of the encoded input sequence.
-        - **prev_align** (batch_size * num_heads, v_len): tensor containing previous timestep`s alignment
+        - **prev_attn** (batch_size * num_heads, v_len): tensor containing previous timestep`s attention (alignment)
 
-    Returns: output, align
+    Returns: output, attn
         - **output** (batch, output_len, dimensions): tensor containing the feature from encoder outputs
-        - **align** (batch * num_heads, v_len): tensor containing the alignment from the encoder outputs.
+        - **attn** (batch * num_heads, v_len): tensor containing the attention (alignment) from the encoder outputs.
 
     Reference:
         - **Attention Is All You Need**: https://arxiv.org/abs/1706.03762
@@ -44,22 +43,22 @@ class MultiHeadedLocationAwareAttention(nn.Module):
         - **State-Of-The-Art Speech Recognition with Sequence-to-Sequence Models**: https://arxiv.org/abs/1712.01769
     """
     def __init__(self, hidden_dim, num_heads=8, conv_out_channel=10):
-        super().__init__()
+        super(MultiHeadedLocationAwareAttention, self).__init__()
         self.num_heads = num_heads
         self.dim = int(hidden_dim / num_heads)
-        self.query_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
-        self.value_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
         self.loc_projection = nn.Linear(conv_out_channel, self.dim, bias=False)
         self.loc_conv = nn.Conv1d(num_heads, conv_out_channel, kernel_size=3, padding=1)
-        self.bias = nn.Parameter(torch.rand(self.dim).uniform_(-0.1, 0.1))
+        self.query_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
+        self.value_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
         self.score_projection = nn.Linear(self.dim, 1, bias=True)
         self.out_projection = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
+        self.bias = nn.Parameter(torch.rand(self.dim).uniform_(-0.1, 0.1))
 
     def forward(self, query, value, prev_attn):
         batch_size, seq_len = value.size(0), value.size(1)
         residual = query
 
-        # Initialize previous attention (alignment) to zeros
+        # Initialize previous attn (alignment) to zeros
         if prev_attn is None:
             prev_attn = value.new_zeros(batch_size, self.num_heads, seq_len)
 
@@ -73,7 +72,7 @@ class MultiHeadedLocationAwareAttention(nn.Module):
         query = query.contiguous().view(-1, 1, self.dim)        # BNx1xD
         value = value.contiguous().view(-1, seq_len, self.dim)  # BNxTxD
 
-        # Get attention score, attention (alignment)
+        # Get attention score, attn
         score = self.score_projection(torch.tanh(value + query + loc_energy + self.bias)).squeeze(2)  # BNxT
         attn = F.softmax(score, dim=1)  # BNxT
 
@@ -87,11 +86,15 @@ class MultiHeadedLocationAwareAttention(nn.Module):
         # Get output
         combined = torch.cat([context, residual], dim=2)
         output = self.out_projection(combined.view(-1, self.hidden_dim << 1)).view(batch_size, -1, self.hidden_dim)
+
         return output, attn
 
 
 class LocationAwareAttention(nn.Module):
-    """ Implementation of Location-Aware Attention (Hybrid Attention) """
+    """
+    Applies a location-aware attention mechanism on the output features from the decoder.
+    Location-aware attention proposed in "Attention-Based Models for Speech Recognition" paper.
+    """
     def __init__(self, hidden_dim, dim, conv_out_channel=10, smoothing=True):
         super(LocationAwareAttention, self).__init__()
         self.hidden_dim = hidden_dim
