@@ -63,7 +63,7 @@ output, attn = attention(query, value, attn)
 ```
 
 * Multi-head
-```
+```python
 B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
 N_HEAD = 8
 
