@@ -247,14 +247,12 @@ class MultiHeadAttention(nn.Module):
     Multi-head attention proposed in "Attention Is All You Need" paper.
 
     Args:
-        in_features (int): The number of expected features in the output
+        hidden_dim (int): The number of expected features in the output
         num_heads (int): The number of heads. (default: )
-        k (int): The dimension of convolution
 
     Inputs: query, value, prev_align
         - **query** (batch, q_len, hidden_dim): tensor containing the output features from the decoder.
         - **value** (batch, v_len, hidden_dim): tensor containing features of the encoded input sequence.
-        - **prev_align** (batch_size * num_heads, v_len): tensor containing previous timestep`s alignment
 
     Returns: output
         - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.
@@ -263,34 +261,33 @@ class MultiHeadAttention(nn.Module):
         - **Attention Is All You Need**: https://arxiv.org/abs/1706.03762
         - **State-Of-The-Art Speech Recognition with Sequence-to-Sequence Models**: https://arxiv.org/abs/1712.01769
     """
-    def __init__(self, hidden_dim, num_head=8):
+    def __init__(self, hidden_dim, num_heads=8):
         super(MultiHeadAttention, self).__init__()
         self.hidden_dim = hidden_dim
-        self.num_head = num_head
-        self.dim = int()
-        self.scaled_dot = ScaledDotProductAttention(dim)
-        self.query_projection = nn.Linear(hidden_dim, dim * num_head)
-        self.value_projection = nn.Linear(hidden_dim, dim * num_head)
+        self.num_heads = num_heads
+        self.dim = int(hidden_dim / num_heads)
+        self.scaled_dot = ScaledDotProductAttention(self.dim)
+        self.query_projection = nn.Linear(hidden_dim, self.dim * num_heads)
+        self.value_projection = nn.Linear(hidden_dim, self.dim * num_heads)
         self.out_projection = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
-        self.normalize = nn.LayerNorm(self.hidden_dim)
 
     def forward(self, query, value):
         batch_size = value.size(0)
         residual = query
 
-        query = self.query_projection(query).view(batch_size, -1, self.num_head, self.dim)
-        value = self.value_projection(value).view(batch_size, -1, self.num_head, self.dim)
+        query = self.query_projection(query).view(batch_size, -1, self.num_heads, self.dim)
+        value = self.value_projection(value).view(batch_size, -1, self.num_heads, self.dim)
 
-        query = query.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_head, -1, self.dim)
-        value = value.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_head, -1, self.dim)
+        query = query.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_heads, -1, self.dim)
+        value = value.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_heads, -1, self.dim)
 
         context, _ = self.scaled_dot(query, value)
         context = context.view(self.num_head, batch_size, -1, self.dim)
 
-        context = context.permute(1, 2, 0, 3).contiguous().view(batch_size, -1, self.num_head * self.dim)
+        context = context.permute(1, 2, 0, 3).contiguous().view(batch_size, -1, self.num_heads * self.dim)
         combined = torch.cat([context, residual], dim=2)
 
-        output = self.normalize(self.out_projection(combined.view(-1, self.hidden_dim << 1))).view(batch_size, -1, self.hidden_dim)
+        output = torch.tanh(self.out_projection(combined.view(-1, self.hidden_dim << 1))).view(batch_size, -1, self.hidden_dim)
         return output
 
 
