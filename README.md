@@ -11,7 +11,7 @@ these attentions can used in neural machine translation, speech recognition, ima
   
 ![image](https://user-images.githubusercontent.com/42150335/83331902-7bf9f780-a2d3-11ea-8f7e-172f55deef45.png)
   
-Attention mechanism allows to attend to different parts of the source sentence at each step of the output generation.   
+`Attention mechanism` allows to attend to different parts of the source sentence at each step of the output generation.   
 Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.  
   
 ## Implementation list
@@ -28,7 +28,7 @@ Instead of encoding the input sequence into a single fixed context vector, we le
    
 ## How To Use
 
-* Multi-headed Location-aware
+* `Multi-headed Location-aware`
 ```python
 B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
 N_HEAD, N_CONV_OUT = 8, 10
@@ -45,7 +45,7 @@ query, hidden = nn.GRU(input_var, hidden)
 output, attn = attention(query, value, attn)
 ```
 
-* Location-aware 
+* `Location-aware` 
 ```python
 B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
 N_HEAD, N_CONV_OUT, ATTN_DIM = 8, 10, 256
@@ -62,7 +62,7 @@ query, hidden = nn.GRU(input_var, hidden)
 output, attn = attention(query, value, attn)
 ```
 
-* Multi-head
+* `Multi-head`
 ```python
 B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
 N_HEAD = 8
@@ -79,7 +79,7 @@ output = attention(query, value)
 ```
   
 ## Troubleshoots and Contributing
-If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sh951011/Attention-Implementation/issues) on Github.  
+If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sooftware/nlp-attentions/issues) on Github.  
 or Contacts sh951011@gmail.com please.
   
 I appreciate any kind of feedback or contribution.  Feel free to proceed with small issues like bug fixes, documentation improvement.  For major contributions and new features, please discuss with the collaborators in corresponding issues.  
