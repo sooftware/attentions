@@ -9,9 +9,11 @@
 `nlp-attentions` provides some attentions used in natural language processing using pytorch.   
 these attentions can used in neural machine translation, speech recognition, image captioning etc...  
   
-<img src="https://miro.medium.com/max/1200/1*1V221DO9QIafh4htkwVBYw.jpeg" width=700>
+* Attention mechanism in speech recognition
   
-Attention Mechanism allows to attend to different parts of the source sentence at each step of the output generation.   
+![image](https://user-images.githubusercontent.com/42150335/83331902-7bf9f780-a2d3-11ea-8f7e-172f55deef45.png)
+  
+Attention mechanism allows to attend to different parts of the source sentence at each step of the output generation.   
 Instead of encoding the input sequence into a single fixed context vector, we let the model learn how to generate a context vector for each output time step.  
   
 ## Implementation list
