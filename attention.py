@@ -94,6 +94,25 @@ class LocationAwareAttention(nn.Module):
     """
     Applies a location-aware attention mechanism on the output features from the decoder.
     Location-aware attention proposed in "Attention-Based Models for Speech Recognition" paper.
+    The location-aware attention mechanism is performing well in speech recognition tasks.
+
+    Args:
+        hidden_dim (int): The number of expected features in the output
+        num_heads (int): The number of heads. (default: )
+        conv_out_channel (int): The number of out channel in convolution
+        smooting (bool): flag indication whether to use smoothing or not.
+
+    Inputs: query, value, prev_attn, smoothing
+        - **query** (batch, q_len, hidden_dim): tensor containing the output features from the decoder.
+        - **value** (batch, v_len, hidden_dim): tensor containing features of the encoded input sequence.
+        - **prev_attn** (batch_size * num_heads, v_len): tensor containing previous timestep`s attention (alignment)
+
+    Returns: output, attn
+        - **output** (batch, output_len, dimensions): tensor containing the feature from encoder outputs
+        - **attn** (batch * num_heads, v_len): tensor containing the attention (alignment) from the encoder outputs.
+
+    Reference:
+        - **Attention-Based Models for Speech Recognition**: https://arxiv.org/abs/1506.07503
     """
     def __init__(self, hidden_dim, dim, conv_out_channel=10, smoothing=True):
         super(LocationAwareAttention, self).__init__()
@@ -153,6 +172,9 @@ class ScaledDotProductAttention(nn.Module):
     Returns: context, attn
         - **context**: tensor containing the context vector from attention mechanism.
         - **attn**: tensor containing the alignment from the encoder outputs.
+
+    Reference:
+        - **Attention Is All You Need**: https://arxiv.org/abs/1706.03762
     """
     def __init__(self, dim):
         super(ScaledDotProductAttention, self).__init__()
