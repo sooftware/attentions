@@ -1,8 +1,8 @@
-# :stuck_out_tongue_winking_eye: nlp-attentions
+<p align=center><i> <img src="https://user-images.githubusercontent.com/42150335/83960910-2ae89580-a8c9-11ea-956e-482485197629.png" width=500> </i></p>  
+    
+<p align=center><i> <img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=20> <img src="https://img.shields.io/badge/License-MIT-lightgrey" height=20> </i></p> 
   
-### Pytorch implementation of some attentions used in Natural Language Processing
-  
-[<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=18>](https://pytorch.org/) <img src="https://img.shields.io/badge/License-MIT-yellow" height=20>
+<p align=center> nlp-attention: Some Attention Implementation in PyTorch </p>
   
 ## Intro
   
