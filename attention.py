@@ -197,9 +197,9 @@ class CustomizingAttention(nn.Module):
     I combined these two attention mechanisms as custom.
 
     Args:
-        in_features (int): The number of expected features in the output
+        hidden_dim (int): The number of expected features in the output
         num_heads (int): The number of heads. (default: )
-        k (int): The dimension of convolution
+        conv_out_channel (int): The dimension of convolution
 
     Inputs: query, value, prev_attn
         - **query** (batch, q_len, hidden_dim): tensor containing the output features from the decoder.
@@ -216,23 +216,26 @@ class CustomizingAttention(nn.Module):
         - **State-Of-The-Art Speech Recognition with Sequence-to-Sequence Models**: https://arxiv.org/abs/1712.01769
     """
 
-    def __init__(self, in_features, num_heads=8, k=10):
+    def __init__(self, hidden_dim, num_heads=4, conv_out_channel=10):
         super(CustomizingAttention, self).__init__()
-        self.in_features = in_features
+        self.hidden_dim = hidden_dim
         self.num_heads = num_heads
-        self.dim = int(in_features / num_heads)
+        self.dim = int(hidden_dim / num_heads)
         self.scaled_dot = ScaledDotProductAttention(self.dim)
-        self.query_projection = nn.Linear(in_features, self.dim * num_heads, bias=True)
-        self.value_projection = nn.Linear(in_features, self.dim * num_heads, bias=False)
-        self.loc_conv = nn.Conv1d(in_channels=1, out_channels=k, kernel_size=3, padding=1)
-        self.loc_projection = nn.Linear(k, self.dim, bias=False)
+        self.conv1d = nn.Conv1d(1, conv_out_channel, kernel_size=3, padding=1)
+        self.query_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=True)
+        self.value_projection = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
+        self.loc_projection = nn.Linear(conv_out_channel, self.dim, bias=False)
         self.bias = nn.Parameter(torch.rand(self.dim * num_heads).uniform_(-0.1, 0.1))
-        self.linear_out = nn.Linear(in_features << 1, in_features, bias=True)
-        self.normalize = nn.LayerNorm(in_features)
+        self.out_projection = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
 
     def forward(self, query, value, prev_attn):
         batch_size, q_len, v_len = value.size(0), query.size(1), value.size(1)
         residual = query
+
+        # Initialize previous attn (alignment) to zeros
+        if prev_attn is None:
+            prev_attn = value.new_zeros(batch_size * self.num_heads, v_len)
 
         loc_energy = self.get_loc_energy(prev_attn, batch_size, v_len)  # get location energy
 
@@ -245,17 +248,18 @@ class CustomizingAttention(nn.Module):
         value = value.contiguous().view(-1, v_len, self.dim)
 
         context, attn = self.scaled_dot(query, value)
+        attn = attn.squeeze()
 
         context = context.view(self.num_heads, batch_size, q_len, self.dim).permute(1, 2, 0, 3)
         context = context.contiguous().view(batch_size, q_len, -1)
 
         combined = torch.cat([context, residual], dim=2)
-        output = self.normalize(self.linear_out(combined.view(-1, self.in_features << 1))).view(batch_size, -1, self.in_features)
+        output = torch.tanh(self.out_projection(combined.view(-1, self.hidden_dim << 1))).view(batch_size, -1, self.hidden_dim)
 
-        return output, attn.squeeze()
+        return output, attn
 
-    def get_loc_energy(self, prev_align, batch_size, v_len):
-        conv_feat = self.loc_conv(prev_align.unsqueeze(1))
+    def get_loc_energy(self, prev_attn, batch_size, v_len):
+        conv_feat = self.conv1d(prev_attn.unsqueeze(1))
         conv_feat = conv_feat.view(batch_size, self.num_heads, -1, v_len).permute(0, 1, 3, 2)
 
         loc_energy = self.loc_projection(conv_feat).view(batch_size, self.num_heads, v_len, self.dim)
