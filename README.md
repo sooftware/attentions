@@ -18,49 +18,13 @@ Instead of encoding the input sequence into a single fixed context vector, we le
   
 |Name|Alignment score function|Citation|  
 |---|---|---|  
-|Content-base|score(***s_t***, ***h_i***) = cosine\[***s_t***, ***h_i***\] |[Graves 2014](https://arxiv.org/abs/1410.5401)|  
 |Additive|score(***s_t***, ***h_i***) = **v** tanh(**W**\[***s_t***;***h_i***\])|[Bahdanau 2015](https://arxiv.org/pdf/1409.0473.pdf)|  
 |Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i***|[Luong 2015](https://arxiv.org/pdf/1508.04025.pdf)|  
 |Location-Aware|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
-|Multi-headed Location-Aware|Multi-head + Location-aware|-|  
 |Scaled Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i*** / **d_k**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
 |Multi-Head|score(***Q***, ***K***, ***V***) = (head_1, ..., head_n) **W**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
    
 ## How To Use
-
-* `Multi-headed Location-aware`
-```python
-B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
-N_HEAD, N_CONV_OUT = 8, 10
-attn = None
-
-attention = MultiHeadedLocationAwareAttention(H, N_HEAD, N_CONV_OUT)
-
-# examples
-input_var = torch.FloatTensor(B, 1, H)
-hidden = torch.zeros(L, B, H)
-value = torch.FloatTensor(B, T, H)
-
-query, hidden = nn.GRU(input_var, hidden)
-output, attn = attention(query, value, attn)
-```
-
-* `Location-aware` 
-```python
-B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
-N_HEAD, N_CONV_OUT, ATTN_DIM = 8, 10, 256
-attn = None
-
-attention = LocationAwareAttention(H, ATTN_DIM, N_CONV_OUT, smoothing=True)
-
-# examples
-input_var = torch.FloatTensor(B, 1, H)
-hidden = torch.zeros(L, B, H)
-value = torch.FloatTensor(B, T, H)
-
-query, hidden = nn.GRU(input_var, hidden)
-output, attn = attention(query, value, attn)
-```
 
 * `Multi-head`
 ```python
@@ -74,8 +38,8 @@ input_var = torch.FloatTensor(B, 1, H)
 hidden = torch.zeros(L, B, H)
 value = torch.FloatTensor(B, T, H)
 
-query, hidden = nn.GRU(input_var, hidden)
-output = attention(query, value)
+output, hidden = nn.LSTM(input_var, hidden)
+context, attn = attention(output, value)
 ```
   
 ## Troubleshoots and Contributing
