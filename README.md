@@ -23,24 +23,6 @@ Instead of encoding the input sequence into a single fixed context vector, we le
 |Location-Aware|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
 |Scaled Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i*** / **d_k**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
 |Multi-Head|score(***Q***, ***K***, ***V***) = (head_1, ..., head_n) **W**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
-   
-## How To Use
-
-* `Multi-head`
-```python
-B, L, H, T = 32, 3, 512, 131  # batch, num_layers, hidden_dim, seq_len
-N_HEAD = 8
-
-attention = MultiHeadAttention(H, N_HEAD)
-
-# examples
-input_var = torch.FloatTensor(B, 1, H)
-hidden = torch.zeros(L, B, H)
-value = torch.FloatTensor(B, T, H)
-
-output, hidden = nn.LSTM(input_var, hidden)
-context, attn = attention(output, value)
-```
   
 ## Troubleshoots and Contributing
 If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sooftware/nlp-attentions/issues) on Github.  
