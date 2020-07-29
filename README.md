@@ -33,10 +33,10 @@ I appreciate any kind of feedback or contribution.  Feel free to proceed with sm
 ## Citing
 ```
 @github{
-  title = {nlp-attentions},
+  title = {Awesome-attentions},
   author = {Soohwan Kim},
   publisher = {GitHub},
-  url = {https://github.com/sooftware/nlp-attentions},
+  url = {https://github.com/sooftware/Awesome-attentions},
   year = {2020}
 }
 ```
