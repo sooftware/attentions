@@ -1,12 +1,12 @@
-<p align=center><i> <img src="https://user-images.githubusercontent.com/42150335/83960910-2ae89580-a8c9-11ea-956e-482485197629.png" width=500> </i></p>  
-    
+# Awesome-attentions
+  
 <p align=center><i> <img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=20> <img src="https://img.shields.io/badge/License-MIT-lightgrey" height=20> </i></p> 
   
-<p align=center> nlp-attention: Some Attention Implementation in PyTorch </p>
+PyTorch implementation of some attentions for Deep Learning Researchers.  
   
 ## Intro
   
-`nlp-attentions` provides some attentions used in natural language processing using pytorch.   
+`Awesome-attentions` provides some attentions used in natural language processing using pytorch.   
 these attentions can used in neural machine translation, speech recognition, image captioning etc...  
   
 ![image](https://user-images.githubusercontent.com/42150335/83331902-7bf9f780-a2d3-11ea-8f7e-172f55deef45.png)
