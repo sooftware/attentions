@@ -6,7 +6,7 @@ PyTorch implementation of some attentions for Deep Learning Researchers.
   
 ## Intro
   
-`Awesome-attentions` provides some attentions used in natural language processing using pytorch.   
+`attentions` provides some attentions used in natural language processing using pytorch.   
 these attentions can used in neural machine translation, speech recognition, image captioning etc...  
   
 ![image](https://user-images.githubusercontent.com/42150335/83331902-7bf9f780-a2d3-11ea-8f7e-172f55deef45.png)
