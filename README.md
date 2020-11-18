@@ -1,6 +1,6 @@
-# attentions
+# nlp-attentions
   
-<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=20> <img src="https://img.shields.io/badge/License-MIT-lightgrey" height=20> [![CodeFactor](https://www.codefactor.io/repository/github/sooftware/attentions/badge)](https://www.codefactor.io/repository/github/sooftware/awesome-attentions)
+<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=20> <img src="https://img.shields.io/badge/License-MIT-lightgrey" height=20> [![CodeFactor](https://www.codefactor.io/repository/github/sooftware/nlp-attentions/badge)](https://www.codefactor.io/repository/github/sooftware/awesome-attentions)
   
 PyTorch implementation of some attentions for Deep Learning Researchers.  
   
