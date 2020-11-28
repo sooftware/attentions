@@ -33,5 +33,5 @@ I appreciate any kind of feedback or contribution.  Feel free to proceed with sm
 ## Author
   
 * Soohwan Kim [@sooftware](https://github.com/sooftware)
-* Contacts: sh951011@gmail.com
+* Contacts: kaki.brain@kakaobrain.com
 
