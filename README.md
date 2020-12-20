@@ -26,7 +26,7 @@ Instead of encoding the input sequence into a single fixed context vector, we le
   
 ## Troubleshoots and Contributing
 If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sooftware/nlp-attentions/issues) on Github.  
-or Contacts sh951011@gmail.com please.
+or Contacts kaki.brain@kakaobrain.com please.
   
 I appreciate any kind of feedback or contribution.  Feel free to proceed with small issues like bug fixes, documentation improvement.  For major contributions and new features, please discuss with the collaborators in corresponding issues.  
   
