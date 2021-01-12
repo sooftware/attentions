@@ -30,6 +30,9 @@ or Contacts sh951011@gmail.com please.
   
 I appreciate any kind of feedback or contribution.  Feel free to proceed with small issues like bug fixes, documentation improvement.  For major contributions and new features, please discuss with the collaborators in corresponding issues.  
   
+## Code Style
+I follow [PEP-8](https://www.python.org/dev/peps/pep-0008/) for code style. Especially the style of docstrings is important to generate documentation.  
+  
 ## Author
   
 * Soohwan Kim [@sooftware](https://github.com/sooftware)
