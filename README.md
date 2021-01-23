@@ -14,7 +14,7 @@
      <a href="https://github.com/pytorch/pytorch">
           <img src="http://img.shields.io/badge/framework-PyTorch-informational"> 
      </a>
-     <a href="https://github.com/pytorch/pytorch">
+     <a href="https://www.python.org/dev/peps/pep-0008/">
           <img src="http://img.shields.io/badge/codestyle-PEP--8-informational"> 
      </a>
   
