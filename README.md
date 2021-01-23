@@ -39,7 +39,7 @@ Instead of encoding the input sequence into a single fixed context vector, we le
 |Location-Aware (Location Sensitive) Attention|[Chorowski et al., 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
 |Scaled Dot-Product Attention|[Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)|  
 |Multi-Head Attention|[Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)|
-|Relative Multi-Head Attention|[ZihangDai et al., 2019](https://arxiv.org/abs/1901.02860)|  
+|Relative Multi-Head Self Attention|[ZihangDai et al., 2019](https://arxiv.org/abs/1901.02860)|  
   
   
 ## Troubleshoots and Contributing
