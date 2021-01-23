@@ -1,8 +1,23 @@
-# attentions
+<p  align="center"><img src="https://user-images.githubusercontent.com/42150335/105606759-8dea5680-5dde-11eb-96a0-78f632a926c2.png" height=100>
   
-<img src="https://github.com/gentaiscool/end2end-asr-pytorch/raw/master/img/pytorch-logo-dark.png" height=20> <img src="https://img.shields.io/badge/License-MIT-lightgrey" height=20> [![CodeFactor](https://www.codefactor.io/repository/github/sooftware/attentions/badge)](https://www.codefactor.io/repository/github/sooftware/attentions)
+<p  align="center">An Apache 2.0 PyTorch implementation of some attentions for Deep Learning Researchers.
   
-PyTorch implementation of some attentions for Deep Learning Researchers.  
+***
+  
+<p  align="center"> 
+     <a href="https://www.codefactor.io/repository/github/sooftware/attentions">
+          <img src="https://www.codefactor.io/repository/github/sooftware/attentions/badge"> 
+     </a>
+     <a href="https://github.com/sooftware/KoSpeech/blob/latest/LICENSE">
+          <img src="http://img.shields.io/badge/license-Apache--2.0-informational"> 
+     </a>
+     <a href="https://github.com/pytorch/pytorch">
+          <img src="http://img.shields.io/badge/framework-PyTorch-informational"> 
+     </a>
+     <a href="https://www.python.org/dev/peps/pep-0008/">
+          <img src="http://img.shields.io/badge/codestyle-PEP--8-informational"> 
+     </a>
+  
   
 ## Intro
   
