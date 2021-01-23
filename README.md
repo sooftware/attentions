@@ -31,13 +31,16 @@ Instead of encoding the input sequence into a single fixed context vector, we le
   
 ## Implementation list
   
-|Name|Alignment score function|Citation|  
-|---|---|---|  
-|Additive|score(***s_t***, ***h_i***) = **v** tanh(**W**\[***s_t***;***h_i***\])|[Bahdanau 2015](https://arxiv.org/pdf/1409.0473.pdf)|  
-|Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i***|[Luong 2015](https://arxiv.org/pdf/1508.04025.pdf)|  
-|Location-Aware (Location Sensitive)|score(***s_t***, ***h_i***) = **w** tanh(**W*****s_t*** + **V*****h_i*** + ***b***)|[Chorowski 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
-|Scaled Dot-Product|score(***s_t***, ***h_i***) = ***s_t*** · ***h_i*** / **d_k**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
-|Multi-Head|score(***Q***, ***K***, ***V***) = (head_1, ..., head_n) **W**|[Vaswani 2017](https://arxiv.org/abs/1706.03762)|  
+ 
+|Name|Citation|  
+|---|---|  
+|Additive Attention|[Bahdanau et al., 2015](https://arxiv.org/pdf/1409.0473.pdf)|  
+|Dot-Product Attention|[Luong et al., 2015](https://arxiv.org/pdf/1508.04025.pdf)|  
+|Location-Aware (Location Sensitive) Attention|[Chorowski et al., 2015](http://papers.nips.cc/paper/5847-attention-based-models-for-speech-recognition.pdf)|    
+|Scaled Dot-Product Attention|[Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)|  
+|Multi-Head Attention|[Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)|
+|Relative Multi-Head Attention|[ZihangDai et al., 2019](https://arxiv.org/abs/1901.02860)|  
+  
   
 ## Troubleshoots and Contributing
 If you have any questions, bug reports, and feature requests, please [open an issue](https://github.com/sooftware/nlp-attentions/issues) on Github.  
