@@ -49,7 +49,6 @@ class DotProductAttention(nn.Module):
     def __init__(self, hidden_dim):
         super(DotProductAttention, self).__init__()
         self.normalize = nn.LayerNorm(hidden_dim)
-        self.out_projection = nn.Linear(hidden_dim * 2, hidden_dim)
 
     def forward(self, query: Tensor, value: Tensor) -> Tuple[Tensor, Tensor]:
         batch_size, hidden_dim, input_size = query.size(0), query.size(2), value.size(1)
@@ -189,7 +188,6 @@ class MultiHeadLocationAwareAttention(nn.Module):
         self.query_proj = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
         self.value_proj = nn.Linear(hidden_dim, self.dim * num_heads, bias=False)
         self.score_proj = nn.Linear(self.dim, 1, bias=True)
-        self.out_projection = nn.Linear(hidden_dim << 1, hidden_dim, bias=True)
         self.bias = nn.Parameter(torch.rand(self.dim).uniform_(-0.1, 0.1))
 
     def forward(self, query: Tensor, value: Tensor, last_attn: Tensor) -> Tuple[Tensor, Tensor]:
