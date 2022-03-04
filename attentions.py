@@ -48,7 +48,6 @@ class DotProductAttention(nn.Module):
     """
     def __init__(self, hidden_dim):
         super(DotProductAttention, self).__init__()
-        self.normalize = nn.LayerNorm(hidden_dim)
 
     def forward(self, query: Tensor, value: Tensor) -> Tuple[Tensor, Tensor]:
         batch_size, hidden_dim, input_size = query.size(0), query.size(2), value.size(1)
